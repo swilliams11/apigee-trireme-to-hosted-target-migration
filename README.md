@@ -31,16 +31,36 @@ Identify all the proxies to obtain an accurate count and estimate the level of e
 ### Agile development and Team Structure
 Follow Agile best practices and establish an Agile team with committed team members to complete the migration.
 
-### Identification - TODO
+### Identification
 * Identify all the Trireme proxies across all organizations that need to be migrated.
-  This is important to establish how many proxies will be migrated and also how many HTs you will need to pay above the free tier.  
+  This is important to establish how many proxies will be migrated and also how many HTs you will need to pay for above the free tier.  
 
-### Migration TODO
+### Migration
+#### Startup script
+When you application first starts, make sure your code does not specify a port or IP address. Your code should look similar to what is shown below.
+```
+var port = process.env.PORT || 8080;
+app.listen(port, () => {
+   console.log(`Server listening on port ${port}`)
+ })
+```
+
+Avoid writing code as shown below. This code assigns a static IP(localhost) as the IP address and Nginx will not be able to resolve the static IP.  If you receive a 502 Bad Gateway from Nginx, then this is likely the cause of the error.  Allow the Google/Apigee platform to assign the IP and port to avoid conflicts with other Hosted Targets.  
+
+```
+var ip = process.env.IP || 'localhost';
+var port = process.env.PORT || 8080;
+app.listen(port, ip);
+```
+
 #### a127-magic
 * The a127-magic library is no longer supported and it is not actively under development.  Please use [apigee-tool](https://www.npmjs.com/package/apigeetool) as the next best alternative to deploy Hosted Targets to Apigee Edge.  
-
+* However, you can use the a127-magic library for routing from the Swagger file to a controller.
+  * https://github.com/apigee-127/a127-documentation/wiki/Configuration#configuring-arbitrary-values
 #### apigee-cache
-Apigee does not provide an alternative to apigee-cache, which use
+Apigee does not provide an alternative to apigee-cache, which uses Apigee Edge Cache.  Therefore, you should modify the existing apigee-cache library to make the API requests directly to your proxy or create a new library that sends API requests to your API proxy which using Apigee Caching.  
+* https://docs.apigee.com/api-platform/nodejs/access-cache-nodejs
+
 #### apigee-access KVMs
 #### apigee-access
 None of the functions on apigee-access will work in a Hosted Target environment.  
@@ -61,6 +81,18 @@ This module will not function correctly in a Hosted Targets environment.  Consid
 If you initiate variables or environment variables in your Trireme proxy with apigee-access (KVM), then you will need to take the following approach to use within HTs.  
 
 * Do not include periods (.) in your environment variable names [`manifest.yaml`](https://docs.apigee.com/api-platform/hosted-targets/hosted-targets-reference#manfiest-file-syntax) file, as these will not be populated correctly when you deploy the proxy as an HT and your application will silently fail.  
+
+### Logging
+Logging is going to be critical to determine what errors are occurring within your Hosted Target backend, so be sure to include logging in your Node.js code.
+
+#### Request Message ID
+The [Message ID](https://docs.apigee.com/api-platform/reference/variables-reference#messageid) property is a globally unique value that is created for every request and allows you to create correlate requests from Apigee Edge to your target servers.  Consider forwarding this property to your Hosted Target via a request header.
+
+#### Logging in Node.js
+Consider including the Apigee Request Message ID in your logging server so that you can quickly correlate errors in Apigee Edge and your target server.  
+
+#### API Monitoring
+Take advantage of [API Monitoring](https://docs.apigee.com/api-monitoring), which gives you the ability to view the log messages and the Request Message ID.  This can help you trace the failure from Apigee Edge to your Hosted Target backend.  
 
 ### Testing
 The best case scenario is you already have automated tests and unit test scripts available.  You should execute the unit tests before Trireme migration and then execute them again during and after the migration and you should receive the same results.

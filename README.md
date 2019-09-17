@@ -45,7 +45,7 @@ app.listen(port, () => {
  })
 ```
 
-Avoid writing code as shown below. This code assigns a static IP(localhost) as the IP address and Nginx will not be able to resolve the static IP.  If you receive a 502 Bad Gateway from Nginx, then this is likely the cause of the error.  Allow the Google/Apigee platform to assign the IP and port to avoid conflicts with other Hosted Targets.  
+Avoid writing code as shown below. This code assigns a static IP (localhost) as the IP address and Nginx will not be able to resolve the static IP.  If you receive a 502 Bad Gateway from Nginx, then this is likely the cause of the error.  Allow the Google/Apigee platform to assign the IP and port to avoid conflicts with other Hosted Targets.  
 
 ```
 var ip = process.env.IP || 'localhost';
